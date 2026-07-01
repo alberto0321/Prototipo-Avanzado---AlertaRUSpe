@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlertaRUSpe - Sistema Web Profesional</title>
+    <style>
+        :root {
+            --bg-header: #a3b899;
+            --bg-body: #f4f1ea;
+            --text-dark: #1e293b;
+            --green-bar: #5c8374;
+            --gray-light: #cbd5e1;
+            
+            /* Colores Fuertes e Intensos para la Barra del Semáforo */
+            --bar-verde: #16a34a;
+            --bar-naranja: #ea580c;
+            --bar-rojo: #dc2626;
+
+            /* Gráficos */
+            --color-efectivo: #b45309;
+            --color-digital: #0284c7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .header {
+            background-color: var(--bg-header);
+            color: var(--text-dark);
+            text-align: center;
+            padding: 18px;
+            font-weight: bold;
+            font-size: 20px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--gray-light);
+        }
+
+        .content-area {
+            padding: 20px;
+            padding-bottom: 80px;
+            display: none;
+        }
+
+        .grid-pc {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .grid-pc {
+                grid-template-columns: 1fr 1fr;
+            }
+            .full-width-pc {
+                grid-column: span 2;
+            }
+        }
+
+        /* Caja de ingresos acumulados centrada */
+        .sales-box {
+            background-color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--gray-light);
+        }
+        .sales-box h3 { width: 100%; }
+        .sales-box p { font-size: 32px; font-weight: bold; margin-top: 5px; width: 100%; }
+
+        /* Estilo base del monitor */
+        .monitor-card {
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        
+        /* Contenedor de la barra dentro del monitor con fondo oscuro sutil */
+        .progress-container {
+            background-color: rgba(0, 0, 0, 0.08);
+            height: 25px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        /* La barra interna */
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .alert-box {
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.4;
+            border: 1px solid transparent;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .vencimiento-card {
+            background-color: #eff6ff;
+            border-left: 5px solid #3b82f6;
+            padding: 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            line-height: 1.6;
+        }
+
+        .chart-section {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            border: 1px solid var(--gray-light);
+            margin-top: 5px;
+        }
+        .chart-header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .chart-legend {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e2f0;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; color: #475569; }
+        .legend-color { width: 14px; height: 14px; border-radius: 4px; }
+        .chart-select { padding: 8px 14px; font-size: 13px; font-weight: bold; border: 1px solid #cbd5e1; border-radius: 8px; background: white; cursor: pointer; }
+
+        .chart-container { display: flex; justify-content: space-between; align-items: flex-end; height: 150px; border-bottom: 2px solid #94a3b8; }
+        .chart-bar-wrapper { flex: 1; display: flex; align-items: flex-end; justify-content: center; height: 100%; gap: 5px; }
+        .chart-bar { width: 100%; max-width: 20px; height: 0%; border-radius: 4px 4px 0 0; transition: height 0.5s; position: relative; }
+        .chart-bar:hover::after { content: attr(data-monto); position: absolute; top: -28px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; font-size: 10px; padding: 4px 7px; border-radius: 4px; z-index: 10; white-space: nowrap; }
+        .chart-days-labels { display: flex; justify-content: space-between; font-size: 11px; margin-top: 10px; font-weight: bold; color: #64748b; }
+        .chart-days-labels span { flex: 1; text-align: center; }
+
+        .section-block { background-color: #eae6df; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
+        .section-block h4 { text-transform: uppercase; font-size: 14px; margin-bottom: 20px; text-align: center; color: #334155; letter-spacing: 0.5px;}
+        .data-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-weight: bold; }
+        .data-label { font-size: 14px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .data-input { width: 160px; padding: 10px; text-align: right; border: 1px solid #94a3b8; background: white; border-radius: 6px; font-size: 16px; font-weight: bold; color: #0f172a; }
+
+        .btn-save { background-color: var(--green-bar); color: white; width: 100%; padding: 14px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer; border-radius: 4px; font-size: 16px; letter-spacing: 0.5px; }
+        .btn-secondary { background-color: #475569; color: white; padding: 10px 15px; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; margin-bottom: 15px; }
+        .btn-action { padding: 4px 8px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; border-radius: 3px; margin-left: 4px; }
+
+        /* NAVEGACIÓN */
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background-color: white; border-top: 2px solid var(--gray-light); display: none; justify-content: center; z-index: 100; }
+        .nav-container { width: 100%; max-width: 1200px; display: flex; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; color: #64748b; cursor: pointer; text-transform: uppercase; }
+        .nav-item.active { color: var(--green-bar); background-color: #f1f5f9; }
+        .nav-icon { font-size: 22px; margin-bottom: 2px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--gray-light); }
+        th { background-color: #f1f5f9; }
+
+        .tabla-cronograma th, .tabla-cronograma td { font-size: 12px; padding: 10px; text-align: center; }
+        .fila-resaltada { background-color: #fef08a !important; color: #854d0e !important; font-weight: bold; }
+
+        /* ESTILOS DE LA PÁGINA DEL PRODUCTO / LANDING */
+        .product-landing { padding: 40px 20px; max-width: 900px; margin: auto; text-align: center; }
+        .product-title { font-size: 32px; color: var(--text-dark); margin-bottom: 10px; font-weight: bold; }
+        .product-desc { font-size: 15px; color: #475569; margin-bottom: 35px; line-height: 1.6; max-width: 700px; margin-left: auto; margin-right: auto; text-transform: none; }
+        
+        .plans-container { display: grid; grid-template-columns: 1fr; gap: 25px; margin-bottom: 40px; text-align: left; }
+        @media (min-width: 768px) { .plans-container { grid-template-columns: 1fr 1fr; } }
+        
+        .plan-card { background: #1e293b; color: white; border-radius: 12px; padding: 25px; border: 1px solid #475569; display: flex; flex-direction: column; justify-content: space-between; }
+        .plan-card.premium { border: 3px solid #60a5fa; }
+        
+        .plan-name { font-size: 19px; font-weight: bold; margin-bottom: 20px; color: #cbd5e1; text-transform: none; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        
+        /* Estilo del precio al final */
+        .plan-price { font-size: 24px; font-weight: bold; color: #cbd5e1; margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px; text-transform: none; text-align: center; }
+        
+        .plan-features { list-style: none; padding: 0; }
+        .plan-features li { font-size: 14px; margin-bottom: 12px; line-height: 1.5; padding-left: 15px; position: relative; text-transform: none; }
+        .plan-features li::before { content: "•"; position: absolute; left: 0; color: #cbd5e1; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        
+        <!-- PANTALLA PÁGINA DEL PRODUCTO / BIENVENIDA -->
+        <div id="scrPrivacy" class="product-landing">
+            <h1 class="product-title">🚦 AlertaRUSpe</h1>
+            <p class="product-desc">
+                plataforma 100% segura: tu privacidad es nuestra prioridad absoluta. esta aplicación está diseñada para funcionar de manera local e independiente; tus datos de ingresos no se guardarán en servidores externos ni se compartirán bajo ningún motivo con la sunat ni ninguna otra entidad fiscal o del estado. tienes el control total de tu negocio con total confianza.
+            </p>
+            
+            <div class="plans-container">
+                <!-- Plan Básico Corregido -->
+                <div class="plan-card">
+                    <div>
+                        <div class="plan-name">Plan Básico – Control Diario</div>
+                        <ul class="plan-features">
+                            <li>Registro de ingresos básico</li>
+                            <li>Semáforo fiscal dinámico</li>
+                            <li>Recalibrador automático de categorías</li>
+                            <li>Almacenamiento local y seguro en el propio dispositivo</li>
+                        </ul>
+                    </div>
+                    <div class="plan-price">s/ 10.00</div>
+                </div>
+
+                <!-- Plan Premium Corregido -->
+                <div class="plan-card premium">
+                    <div>
+                        <div class="plan-name">Plan Premium – Control Total</div>
+                        <ul class="plan-features">
+                            <li>Incluye todas las funciones del plan básico</li>
+                            <li>Registro de ingresos de doble entrada</li>
+                            <li>Gráfico estadístico semanal con filtros</li>
+                            <li>Cronograma de vencimientos sincronizados a SUNAT</li>
+                        </ul>
+                    </div>
+                    <div class="plan-price">s/ 15.00</div>
+                </div>
+            </div>
+
+            <button onclick="entrarApp()" class="btn-save" style="max-width: 400px; margin: auto;">PROBAR PLATAFORMA</button>
+        </div>
+
+        <!-- PANTALLA 1: INICIO -->
+        <div id="scrInicio" class="content-area">
+            <div class="header" id="txtHeaderMes">Cargando Periodo...</div><br>
+            <div class="grid-pc">
+                
+                <div id="cardCronogramaInicio" class="vencimiento-card full-width-pc">
+                    <strong>🗓️ Cronograma de vencimientos</strong><br>
+                    <div id="txtFechaVencimientoInicio">Calculando proyección de vencimiento...</div>
+                </div>
+
+                <div class="sales-box">
+                    <h3>Ingresos Acumulados</h3>
+                    <p id="txtAcumulado">S/ 0.00</p>
+                </div>
+                
+                <div id="cardMonitor" class="monitor-card">
+                    <h4 id="txtEstadoTitulo" style="font-weight: bold; font-size: 18px; text-transform: uppercase;">Zona Segura</h4>
+                    <div class="progress-container">
+                        <div id="progressBar" class="progress-bar"></div>
+                    </div>
+                    <p style="font-size:14px; font-weight:bold; text-align:center; margin-bottom: 10px;" id="txtPorcentaje">0% ALCANZADO</p>
+                    <p style="font-size:13px; line-height: 1.4;" id="txtDetalleRegimen">Cargando...</p>
+                </div>
+
+                <div id="cardAlertaBox" class="alert-box full-width-pc">
+                    <strong>💡 Estado de Alerta:</strong> <span id="txtAlertaCuerpo">Cargando...</span>
+                </div>
+
+                <div class="chart-section full-width-pc">
+                    <div class="chart-header-area">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <p style="font-size:14px; font-weight:bold; text-transform:uppercase; color:#475569;">📊 Resumen Semanal de Ingresos</p>
+                            <div id="graficoLeyenda" class="chart-legend"></div>
+                        </div>
+                        <select id="selectorTipoGrafico" class="chart-select" onchange="actualizarGraficoSemanas()">
+                            <option value="todos">Todos los Ingresos</option>
+                            <option value="efectivo">Solo Efectivo</option>
+                            <option value="digital">Solo Digital</option>
+                        </select>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-bar-wrapper"><div id="bar0A" class="chart-bar"></div><div id="bar0B" class="chart-bar"></div></div>
+                        <div class="chart-bar-wrapper"><div id="bar1A" class="chart-bar"></div><div id="bar1B" class="chart-bar"></div></div>
+                        <div class="chart-bar-wrapper"><div id="bar2A" class="chart-bar"></div><div id="bar2B" class="chart-bar"></div></div>
+                        <div class="chart-bar-wrapper"><div id="bar3A" class="chart-bar"></div><div id="bar3B" class="chart-bar"></div></div>
+                        <div class="chart-bar-wrapper"><div id="bar4A" class="chart-bar"></div><div id="bar4B" class="chart-bar"></div></div>
+                        <div class="chart-bar-wrapper"><div id="bar5A" class="chart-bar"></div><div id="bar5B" class="chart-bar"></div></div>
+                        <div class="chart-bar-wrapper"><div id="bar6A" class="chart-bar"></div><div id="bar6B" class="chart-bar"></div></div>
+                    </div>
+                    <div class="chart-days-labels">
+                        <span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span><span>SÁB</span><span>DOM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA 2: REPORTES -->
+        <div id="scrCierre" class="content-area">
+            <div class="header">Registrar Cierre Diario</div><br>
+            <div class="grid-pc">
+                
+                <div class="section-block full-width-pc" style="background-color: #f8fafc; border: 1px solid var(--gray-light);">
+                    <h4>Ingresos diarios</h4>
+                    
+                    <div class="data-row">
+                        <span class="data-label" style="color: var(--color-efectivo);">Ingresos de Efectivo:</span>
+                        <div>S/ <input type="number" id="txtMontoEfectivoDirecto" class="data-input" placeholder="0.00" oninput="calcularTotalDirecto()"></div>
+                    </div>
+                    
+                    <div class="data-row" style="margin-top: 15px;">
+                        <span class="data-label" style="color: var(--color-digital);">Ingresos Digitales (Yape/Plin):</span>
+                        <div>S/ <input type="number" id="txtMontoDigitalDirecto" class="data-input" placeholder="0.00" oninput="calcularTotalDirecto()"></div>
+                    </div>
+                </div>
+
+                <div class="full-width-pc" style="background-color:#cbd5e1; padding:18px; text-align:center; border-radius: 8px;">
+                    <p style="font-weight:bold; text-transform:uppercase; color: #1e293b; letter-spacing: 0.5px; font-size:13px;">Ingresos totales del día</p>
+                    <p style="font-size:28px; font-weight:bold; margin:5px 0; color: var(--green-bar);" id="lblTotalDiaDirecto">S/ 0.00</p>
+                </div>
+
+                <div class="full-width-pc">
+                    <button class="btn-save" onclick="guardarCierreDirecto()">Guardar registro</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA 3: HISTORIAL -->
+        <div id="scrHistorial" class="content-area">
+            <div class="header">Historial de Registros</div><br>
+            <button class="btn-secondary" onclick="agregarRegistroManual()">➕ Añadir Registro Manual</button>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Ingresos Efectivo</th>
+                            <th>Ingresos Digitales</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHistorial"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PANTALLA 4: CONFIGURACIÓN -->
+        <div id="scrConfig" class="content-area">
+            <div class="header">Configuración del Sistema</div><br>
+            <div class="section-block" style="background: white; border: 1px solid var(--gray-light);">
+                <h3 style="margin-bottom: 15px;">Identificación del Contribuyente</h3>
+                
+                <div class="data-row">
+                    <span>Número de RUC:</span>
+                    <input type="text" id="txtRucConfig" class="data-input" style="text-align:left; width:160px;" maxlength="11" placeholder="Ingresa tu RUC" value="" oninput="guardarRucYSectorizar()">
+                </div>
+                
+                <h4 style="margin-top:25px; margin-bottom:10px; font-size:13px; text-align:left;" id="txtTituloTablaCronograma">Cronograma de Vencimientos Proyectado</h4>
+                <div style="overflow-x: auto;">
+                    <table class="tabla-cronograma">
+                        <thead>
+                            <tr style="background-color: #e2e8f0;">
+                                <th>Último Dígito</th>
+                                <th>Fecha Límite de Declaración y Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaCronograma"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BARRA NAV -->
+    <div id="appNav" class="nav-bar">
+        <div class="nav-container">
+            <div id="navInicio" class="nav-item" onclick="cambiarPantalla('inicio')"><span class="nav-icon">🏠</span><span>Inicio</span></div>
+            <div id="navHistorial" class="nav-item" onclick="cambiarPantalla('historial')"><span class="nav-icon">🕒</span><span>Historial</span></div>
+            <div id="navCierre" class="nav-item" onclick="cambiarPantalla('cierre')"><span class="nav-icon">📊</span><span>Reportes</span></div>
+            <div id="navConfig" class="nav-item" onclick="cambiarPantalla('config')"><span class="nav-icon">⚙️</span><span>Config</span></div>
+        </div>
+    </div>
+
+    <script>
+        let registrosGuardados = JSON.parse(localStorage.getItem('alertaRus_registros')) || [];
+        let yaAlertoCambioCategoria = false;
+        let semanaData = { efectivo: [0,0,0,0,0,0,0], digital: [0,0,0,0,0,0,0] };
+
+        const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        window.onload = function() {
+            let rucPersistido = localStorage.getItem('alertaRus_ruc') || "";
+            let inputRuc = document.getElementById('txtRucConfig');
+            if(inputRuc) {
+                inputRuc.value = rucPersistido;
+            }
+            recalcularDatosSemanales();
+        };
+
+        function entrarApp() {
+            document.getElementById('scrPrivacy').style.display = 'none';
+            document.getElementById('appNav').style.display = 'flex';
+            cambiarPantalla('inicio');
+        }
+
+        function cambiarPantalla(pantalla) {
+            document.getElementById('scrInicio').style.display = 'none';
+            document.getElementById('scrCierre').style.display = 'none';
+            document.getElementById('scrHistorial').style.display = 'none';
+            document.getElementById('scrConfig').style.display = 'none';
+
+            document.getElementById('navInicio').classList.remove('active');
+            document.getElementById('navHistorial').classList.remove('active');
+            document.getElementById('navCierre').classList.remove('active');
+            document.getElementById('navConfig').classList.remove('active');
+
+            if (pantalla === 'inicio') {
+                document.getElementById('scrInicio').style.display = 'block';
+                document.getElementById('navInicio').classList.add('active');
+                actualizarSemaforo();
+                actualizarGraficoSemanas();
+                ejecutarCalculosRuc(); 
+            } else if (pantalla === 'cierre') {
+                document.getElementById('scrCierre').style.display = 'block';
+                document.getElementById('navCierre').classList.add('active');
+            } else if (pantalla === 'historial') {
+                document.getElementById('scrHistorial').style.display = 'block';
+                document.getElementById('navHistorial').classList.add('active');
+                renderHistorial();
+            } else if (pantalla === 'config') {
+                document.getElementById('scrConfig').style.display = 'block';
+                document.getElementById('navConfig').classList.add('active');
+                ejecutarCalculosRuc();
+            }
+        }
+
+        function guardarRucYSectorizar() {
+            let rucVal = document.getElementById('txtRucConfig').value.trim();
+            localStorage.setItem('alertaRus_ruc', rucVal);
+            ejecutarCalculosRuc();
+        }
+
+        function persistirRegistros() {
+            localStorage.setItem('alertaRus_registros', JSON.stringify(registrosGuardados));
+        }
+
+        function ejecutarCalculosRuc() {
+            let fechaActual = new Date();
+            let mesActualIdx = fechaActual.getMonth(); 
+            let anioActual = fechaActual.getFullYear();
+
+            let mesSiguienteIdx = mesActualIdx === 11 ? 0 : mesActualIdx + 1;
+            let anioVencimiento = mesActualIdx === 11 ? anioActual + 1 : anioActual;
+
+            let stringMesActual = nombresMeses[mesActualIdx];
+            let stringMesVencimiento = nombresMeses[mesSiguienteIdx];
+
+            document.getElementById('txtHeaderMes').innerText = `${stringMesActual} ${anioActual}`;
+            
+            if(document.getElementById('txtTituloTablaCronograma')) {
+                document.getElementById('txtTituloTablaCronograma').innerText = `🗓️ Cronograma de Fechas Límites en ${stringMesVencimiento} ${anioVencimiento}`;
+            }
+
+            let baseDia = 15;
+            let fechasBloques = {};
+            let bloques = ["0", "1", "23", "45", "67", "89"];
+            let tempDate = new Date(anioVencimiento, mesSiguienteIdx, baseDia);
+
+            bloques.forEach(bloque => {
+                if (tempDate.getDay() === 6) tempDate.setDate(tempDate.getDate() + 2); 
+                else if (tempDate.getDay() === 0) tempDate.setDate(tempDate.getDate() + 1); 
+                
+                fechasBloques[bloque] = tempDate.getDate();
+                tempDate.setDate(tempDate.getDate() + 1);
+            });
+
+            let tablaCuerpo = document.getElementById('cuerpoTablaCronograma');
+            if(tablaCuerpo) {
+                tablaCuerpo.innerHTML = `
+                    <tr id="row-sunat-0"><td><strong>0</strong></td><td>${fechasBloques["0"]} de ${stringMesVencimiento} de ${anioVencimiento}</td></tr>
+                    <tr id="row-sunat-1"><td><strong>1</strong></td><td>${fechasBloques["1"]} de ${stringMesVencimiento} de ${anioVencimiento}</td></tr>
+                    <tr id="row-sunat-23"><td><strong>2 y 3</strong></td><td>${fechasBloques["23"]} de ${stringMesVencimiento} de ${anioVencimiento}</td></tr>
+                    <tr id="row-sunat-45"><td><strong>4 y 5</strong></td><td>${fechasBloques["45"]} de ${stringMesVencimiento} de ${anioVencimiento}</td></tr>
+                    <tr id="row-sunat-67"><td><strong>6 y 7</strong></td><td>${fechasBloques["67"]} de ${stringMesVencimiento} de ${anioVencimiento}</td></tr>
+                    <tr id="row-sunat-89"><td><strong>8 y 9</strong></td><td>${fechasBloques["89"]} de ${stringMesVencimiento} de ${anioVencimiento}</td></tr>
+                `;
+            }
+
+            let rucInput = document.getElementById('txtRucConfig').value.trim();
+            let txtInicio = document.getElementById('txtFechaVencimientoInicio');
+
+            if (rucInput.length !== 11 || isNaN(rucInput)) {
+                txtInicio.innerHTML = `<span style="color:#ef4444; font-weight:bold;">⚠️ Registra un RUC válido en Configuración para calcular tus alertas de vencimiento.</span>`;
+                return;
+            }
+
+            let ultimoDigito = parseInt(rucInput.charAt(10));
+            let diaFinalPago = fechasBloques["0"];
+            let idFilaAResaltar = "row-sunat-0";
+
+            if (ultimoDigito === 0) { diaFinalPago = fechasBloques["0"]; idFilaAResaltar = "row-sunat-0"; }
+            else if (ultimoDigito === 1) { diaFinalPago = fechasBloques["1"]; idFilaAResaltar = "row-sunat-1"; }
+            else if (ultimoDigito === 2 || ultimoDigito === 3) { diaFinalPago = fechasBloques["23"]; idFilaAResaltar = "row-sunat-23"; }
+            else if (ultimoDigito === 4 || ultimoDigito === 5) { diaFinalPago = fechasBloques["45"]; idFilaAResaltar = "row-sunat-45"; }
+            else if (ultimoDigito === 6 || ultimoDigito === 7) { diaFinalPago = fechasBloques["67"]; idFilaAResaltar = "row-sunat-67"; }
+            else if (ultimoDigito === 8 || ultimoDigito === 9) { diaFinalPago = fechasBloques["89"]; idFilaAResaltar = "row-sunat-89"; }
+
+            txtInicio.innerHTML = `
+                Último dígito RUC: <span style="background:#cbd5e1; padding:2px 6px; border-radius:4px; font-weight:bold;">${ultimoDigito}</span><br>
+                Vencimiento (Cuota fija): <strong style="color:#1d4ed8;">${diaFinalPago} de ${stringMesVencimiento} de ${anioVencimiento}</strong>.
+            `;
+
+            let fila = document.getElementById(idFilaAResaltar);
+            if (fila) fila.classList.add('fila-resaltada');
+        }
+
+        function calcularTotalDirecto() {
+            let efe = parseFloat(document.getElementById('txtMontoEfectivoDirecto').value) || 0;
+            let dig = parseFloat(document.getElementById('txtMontoDigitalDirecto').value) || 0;
+            let total = efe + dig;
+            document.getElementById('lblTotalDiaDirecto').innerText = `S/ ${total.toFixed(2)}`;
+            return { efe, dig, total };
+        }
+
+        function guardarCierreDirecto() {
+            let datos = calcularTotalDirecto();
+            if (datos.total <= 0) {
+                alert("Por favor introduce al menos un monto de ingreso para guardar.");
+                return;
+            }
+
+            let hoy = new Date();
+            let fechaTexto = `${hoy.getDate()}/${hoy.getMonth() + 1}/${hoy.getFullYear()}`;
+            let jsDay = hoy.getDay();
+            let indiceDiaSemana = jsDay === 0 ? 6 : jsDay - 1;
+
+            registrosGuardados.push({
+                id: Date.now(),
+                fecha: fechaTexto,
+                efectivo: datos.efe,
+                digital: datos.dig,
+                total: datos.total,
+                diaIndex: indiceDiaSemana
+            });
+
+            document.getElementById('txtMontoEfectivoDirecto').value = "";
+            document.getElementById('txtMontoDigitalDirecto').value = "";
+            calcularTotalDirecto();
+
+            persistirRegistros();
+            recalcularDatosSemanales();
+            alert("¡Ingreso registrado correctamente!");
+            cambiarPantalla('inicio');
+        }
+
+        function recalcularDatosSemanales() {
+            semanaData.efectivo = [0, 0, 0, 0, 0, 0, 0];
+            semanaData.digital = [0, 0, 0, 0, 0, 0, 0];
+            registrosGuardados.forEach(r => {
+                if (r.diaIndex !== undefined && r.diaIndex >= 0 && r.diaIndex <= 6) {
+                    semanaData.efectivo[r.diaIndex] += r.efectivo;
+                    semanaData.digital[r.diaIndex] += r.digital;
+                }
+            });
+        }
+
+        function actualizarGraficoSemanas() {
+            let tipo = document.getElementById('selectorTipoGrafico').value;
+            let leyendaElemento = document.getElementById('graficoLeyenda');
+
+            let todasSumas = [];
+            for(let i=0; i<7; i++) { todasSumas.push(semanaData.efectivo[i], semanaData.digital[i]); }
+            let maxValor = Math.max(...todasSumas, 100); 
+
+            if (tipo === 'todos') {
+                leyendaElemento.innerHTML = `
+                    <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #fb923c, var(--color-efectivo));"></div><span>Ingresos de Efectivo</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #38bdf8, var(--color-digital));"></div><span>Ingresos Digitales</span></div>
+                `;
+            } else if (tipo === 'efectivo') {
+                leyendaElemento.innerHTML = `<div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #fb923c, var(--color-efectivo));"></div><span>Ingresos de Efectivo</span></div>`;
+            } else {
+                leyendaElemento.innerHTML = `<div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #38bdf8, var(--color-digital));"></div><span>Ingresos Digitales</span></div>`;
+            }
+
+            for (let i = 0; i < 7; i++) {
+                let barraA = document.getElementById(`bar${i}A`); 
+                let barraB = document.getElementById(`bar${i}B`); 
+                let montoEfe = semanaData.efectivo[i];
+                let montoDig = semanaData.digital[i];
+
+                if (tipo === 'todos') {
+                    barraA.style.height = `${(montoEfe / maxValor) * 100}%`;
+                    barraA.style.background = 'linear-gradient(to top, var(--color-efectivo), #fb923c)';
+                    barraA.setAttribute('data-monto', `S/ ${montoEfe.toFixed(2)}`);
+                    barraA.style.display = 'block';
+
+                    barraB.style.height = `${(montoDig / maxValor) * 100}%`;
+                    barraB.style.background = 'linear-gradient(to top, var(--color-digital), #38bdf8)';
+                    barraB.setAttribute('data-monto', `S/ ${montoDig.toFixed(2)}`);
+                    barraB.style.display = 'block';
+                } else if (tipo === 'efectivo') {
+                    barraA.style.height = `${(montoEfe / maxValor) * 100}%`;
+                    barraA.style.background = 'linear-gradient(to top, var(--color-efectivo), #fb923c)';
+                    barraA.setAttribute('data-monto', `S/ ${montoEfe.toFixed(2)}`);
+                    barraA.style.display = 'block';
+                    barraB.style.display = 'none';
+                } else if (tipo === 'digital') {
+                    barraA.style.display = 'none';
+                    barraB.style.height = `${(montoDig / maxValor) * 100}%`;
+                    barraB.style.background = 'linear-gradient(to top, var(--color-digital), #38bdf8)';
+                    barraB.setAttribute('data-monto', `S/ ${montoDig.toFixed(2)}`);
+                    barraB.style.display = 'block';
+                }
+            }
+        }
+
+        function calcularAcumuladoTotal() { return registrosGuardados.reduce((sum, item) => sum + item.total, 0); }
+
+        function actualizarSemaforo() {
+            let acumulado = calcularAcumuladoTotal();
+            document.getElementById('txtAcumulado').innerText = `S/ ${acumulado.toFixed(2)}`;
+            let progressBar = document.getElementById('progressBar');
+            let txtPorcentaje = document.getElementById('txtPorcentaje');
+            let cardAlertaBox = document.getElementById('cardAlertaBox');
+            let txtAlertaCuerpo = document.getElementById('txtAlertaCuerpo');
+            let txtEstadoTitulo = document.getElementById('txtEstadoTitulo');
+            let txtDetalleRegimen = document.getElementById('txtDetalleRegimen');
+            let cardMonitor = document.getElementById('cardMonitor');
+
+            let limiteActual = 5000; let cuotaActual = 20; let categoriaTexto = "Categoría 1";
+
+            if (acumulado > 5000) {
+                limiteActual = 8000; cuotaActual = 50; categoriaTexto = "Categoría 2";
+                if (!yaAlertoCambioCategoria) {
+                    alert("🚨 Alerta de Escalamiento:\n\nHas superado el tope de la Categoría 1.\nEl sistema se recalibró automáticamente a la Categoría 2.");
+                    yaAlertoCambioCategoria = true;
+                }
+            } else { yaAlertoCambioCategoria = false; }
+
+            txtDetalleRegimen.innerHTML = `Régimen: NRUS - ${categoriaTexto}<br>Límite Mensual: S/ ${limiteActual.toLocaleString('en-US', {minimumFractionDigits: 2})}<br>Cuota SUNAT: S/ ${cuotaActual.toFixed(2)}`;
+            let porcentaje = (acumulado / limiteActual) * 100;
+            progressBar.style.width = `${Math.min(100, porcentaje)}%`;
+            txtPorcentaje.innerText = `${Math.round(porcentaje)}% DEL TOPE MENSUAL`;
+
+            let restante = limiteActual - acumulado;
+
+            if (porcentaje <= 50) {
+                cardMonitor.style.backgroundColor = '#dcfce7'; 
+                cardMonitor.style.borderColor = '#bbf7d0';
+                cardMonitor.style.color = '#14532d'; 
+                progressBar.style.backgroundColor = 'var(--bar-verde)'; 
+                cardAlertaBox.style.backgroundColor = '#dcfce7';
+                cardAlertaBox.style.borderColor = '#bbf7d0';
+                cardAlertaBox.style.color = '#14532d';
+                txtEstadoTitulo.innerText = "Zona Segura";
+                txtAlertaCuerpo.innerText = `Parámetros comerciales óptimos. Margen disponible en la categoría actual: S/ ${restante.toFixed(2)}.`;
+            } else if (porcentaje > 50 && porcentaje <= 85) {
+                cardMonitor.style.backgroundColor = '#ffedd5'; 
+                cardMonitor.style.borderColor = '#fed7aa';
+                cardMonitor.style.color = '#7c2d12'; 
+                progressBar.style.backgroundColor = 'var(--bar-naranja)'; 
+                cardAlertaBox.style.backgroundColor = '#ffedd5';
+                cardAlertaBox.style.borderColor = '#fed7aa';
+                cardAlertaBox.style.color = '#7c2d12';
+                txtEstadoTitulo.innerText = "Zona Preventiva";
+                txtAlertaCuerpo.innerText = `Atención preventiva: se aproxima al límite de transacciones. Margen: S/ ${restante.toFixed(2)}.`;
+            } else {
+                cardMonitor.style.backgroundColor = '#fee2e2'; 
+                cardMonitor.style.borderColor = '#fca5a5';
+                cardMonitor.style.color = '#7f1d1d'; 
+                progressBar.style.backgroundColor = 'var(--bar-rojo)'; 
+                cardAlertaBox.style.backgroundColor = '#fee2e2';
+                cardAlertaBox.style.borderColor = '#fca5a5';
+                cardAlertaBox.style.color = '#7f1d1d';
+                txtEstadoTitulo.innerText = "Zona Crítica";
+                txtAlertaCuerpo.innerText = `Riesgo tributario: está a solo S/ ${restante.toFixed(2)} de migrar de categoría o exceder regímenes.`;
+            }
+        }
+
+        function renderHistorial() {
+            let tbody = document.getElementById('tablaHistorial');
+            if (registrosGuardados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No se registran operaciones en el periodo fiscal.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = "";
+            registrosGuardados.forEach(r => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${r.fecha}</td>
+                        <td>S/ ${r.efectivo.toFixed(2)}</td>
+                        <td>S/ ${r.digital.toFixed(2)}</td>
+                        <td style="font-weight:bold; color:var(--green-bar);">S/ ${r.total.toFixed(2)}</td>
+                        <td>
+                            <button class="btn-action" style="background:var(--bar-naranja); color:white;" onclick="editarRegistro(${r.id})">Editar</button>
+                            <button class="btn-action" style="background:var(--bar-rojo); color:white;" onclick="eliminarRegistro(${r.id})">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function agregarRegistroManual() {
+            let fechaInput = prompt("Fecha del registro (DD/MM/AAAA):");
+            if(!fechaInput) return;
+            
+            let partes = fechaInput.split('/');
+            if(partes.length !== 3) {
+                alert("Formato de fecha inválido. Use DD/MM/AAAA");
+                return;
+            }
+            
+            let dia = parseInt(partes[0]);
+            let mes = parseInt(partes[1]) - 1; 
+            let anio = parseInt(partes[2]);
+            let objetoFecha = new Date(anio, mes, dia);
+            
+            if (isNaN(objetoFecha.getTime())) {
+                alert("La fecha introducida es inválida.");
+                return;
+            }
+            
+            let jsDay = objetoFecha.getDay();
+            let idx = jsDay === 0 ? 6 : jsDay - 1; 
+
+            let efe = parseFloat(prompt("Ingresos de Efectivo (S/):", "0.00")) || 0;
+            let dig = parseFloat(prompt("Ingresos Digitales (Yape/Plin) (S/):", "0.00")) || 0;
+
+            registrosGuardados.push({ id: Date.now(), fecha: fechaInput, efectivo: efe, digital: dig, total: efe + dig, diaIndex: idx });
+            persistirRegistros(); recalcularDatosSemanales(); renderHistorial(); actualizarSemaforo();
+        }
+
+        function editarRegistro(id) {
+            let item = registrosGuardados.find(r => r.id === id);
+            if(item) {
+                let nuevoEfe = parseFloat(prompt("Modificar Ingresos de Efectivo (S/):", item.efectivo)) || 0;
+                let nuevoDig = parseFloat(prompt("Modificar Ingresos Digitales (Yape/Plin) (S/):", item.digital)) || 0;
+                item.efectivo = nuevoEfe; item.digital = nuevoDig; item.total = nuevoEfe + nuevoDig;
+                persistirRegistros(); recalcularDatosSemanales(); renderHistorial(); actualizarSemaforo();
+            }
+        }
+
+        function eliminarRegistro(id) {
+            if(confirm("¿Desea dar de baja este registro de operaciones?")) {
+                registrosGuardados = registrosGuardados.filter(r => r.id !== id);
+                persistirRegistros(); recalcularDatosSemanales(); renderHistorial(); actualizarSemaforo();
+            }
+        }
+    </script>
+</body>
+</html>
